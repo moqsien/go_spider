@@ -17,10 +17,7 @@ type Downloader struct {
 	Referer   string
 }
 
-// var CookieRedisClient *redis.Client
 var pool *redis.Pool
-
-// var ctx = context.Background()
 
 func init() {
 	pool = &redis.Pool{
@@ -28,18 +25,12 @@ func init() {
 		MaxActive:   0,
 		IdleTimeout: 100,
 		Dial: func() (redis.Conn, error) {
-			return redis.Dial("tcp", "172.18.255.7:6379", redis.DialDatabase(1), redis.DialPassword("youcheng7347"))
+			return redis.Dial("tcp", "127.0.0.1:6379", redis.DialDatabase(1), redis.DialPassword("xxxx"))
 		},
 	}
-	// CookieRedisClient = redis.NewClient(&redis.Options{
-	// 	Addr:     "172.18.255.7:6379",
-	// 	Password: "youcheng7347", // no password set
-	// 	DB:       1,              // use default DB
-	// })
 }
 
 func (this *Downloader) DoCookie(req *http.Request) {
-	// cookieStr, err := CookieRedisClient.Get(ctx, "zc_cookies").Result()
 	conn := pool.Get()
 	defer conn.Close()
 	cookieStr, err := redis.String(conn.Do("GET", "zc_cookies"))
@@ -54,7 +45,6 @@ func (this *Downloader) DoCookie(req *http.Request) {
 	req.AddCookie(cookie1)
 	rand.Seed(time.Now().Unix())
 	randIntStr := fmt.Sprintf("%v", rand.Intn(1000000000))
-	// fmt.Println(randIntStr)
 	cookie2 := &http.Cookie{
 		Name:  "unb",
 		Value: randIntStr,
@@ -67,8 +57,6 @@ func (this *Downloader) Get(url string, toDoCookie bool) (result string) {
 		Timeout: time.Duration(10 * time.Second),
 	}
 	req, _ := http.NewRequest("GET", url, nil)
-	// fmt.Println(this.UserAgent)
-	// fmt.Println(url)
 	req.Header.Set("User-Agent", this.UserAgent)
 	req.Header.Set("Referer", this.Referer)
 	if toDoCookie {
@@ -84,6 +72,5 @@ func (this *Downloader) Get(url string, toDoCookie bool) (result string) {
 		panic(fmt.Sprintf("读取请求结果失败：%v", err))
 	}
 	result = string(body)
-	// fmt.Println(result)
 	return
 }
